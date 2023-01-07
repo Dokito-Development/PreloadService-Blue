@@ -1,5 +1,4 @@
---!nolint
---PreloadService, DarkPixlz 2022-2023, v3. Do not claim as your own!
+-- PreloadService, DarkPixlz 2022-2023, v3. Do not claim as your own!
 local Loader = {}
 Loader.Completed = Instance.new("RemoteEvent")
 repeat task.wait() until Loader.Completed
@@ -11,18 +10,15 @@ function Print(msg)
 end
 Loader.GameLoaded = false
 function Loader.Load(AssetsData, UIType, CustomUI, Code) 
---	if Loader.GameLoaded then Print("Game has already been loaded for user!") return end
 	local ContentProvider = game:GetService("ContentProvider")
 	local text
 	local barImg
-	--	local NewUI = CustomUI:Clone()
 	local Frame
 	local Type
 	local DefaultUI = false
 	local startTime = os.clock()
 	if not AssetsData == nil then
-		print("???")
---		error("[PreloadService]: AssetsData is missing!")
+		error("[PreloadService]: AssetsData is missing!")
 	else
 		DefaultUI = true
 		if AssetsData == "Game" then
@@ -46,43 +42,24 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 			} 
 		end
 	end
-	--	NewUI.Parent = script
-	--	NewUI.Name = "PreloadServiceCustomUI"
-	if CustomUI == nil then
+			if CustomUI == nil then
+		local DefaultUI = script.PreloadServiceLoadingUI:Clone()
+		DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
+		barImg = DefaultUI.Game.Bar.Progress
 		if Type == "Game" then
 			if not Settings.LightDefaultUI then
-				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
-				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
-				text = DefaultUI.Game.LoadingText
-				barImg = DefaultUI.Game.Bar.Progress
 				UIType = "DarkGame"
+				text = DefaultUI.Game.LoadingText
 			else
-				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
-				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
-				text = DefaultUI.GameLight.LoadingText
-				barImg = DefaultUI.Game.Bar.Progress
 				UIType = "LightGame"
+				text = DefaultUI.GameLight.LoadingText
 			end
-		elseif UIType == "None" then
-			local DefaultUI = script.PreloadServiceLoadingUI:Clone()
-			DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
-			DefaultUI.Enabled = false
-			text = DefaultUI.GameLight.LoadingText
-			barImg = DefaultUI.Game.Bar.Progress
-			UIType = "None"
 		else
-			if not Settings.LightDefaultUI then
-				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
-				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
-				text = DefaultUI.Other.LoadingText
-				barImg = DefaultUI.Other.Bar.Progress
 				UIType = "DarkOther"
+				text = DefaultUI.Other.LoadingText
 			else
-				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
-				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
-				text = DefaultUI.OtherLight.LoadingText
-				barImg = DefaultUI.OtherLight.Bar.Progress
 				UIType = "LightOther"
+				text = DefaultUI.OtherLight.LoadingText
 			end
 		end
 	else
@@ -101,9 +78,7 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 	local succ, err = pcall(function()
 		if CustomUI == nil then
 			text.Parent.Bar.LocalScript:Destroy()
-			--task.wait(0.1)
 			barImg:TweenSizeAndPosition(UDim2.new(0,0,1,0), UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 1, true)
-			--task.wait(1.5)
 		end
 		for i = 1, #AssetsData do
 			local startAssetTime = os.clock()
@@ -115,32 +90,23 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 				text.Text = "Pinging HttpService.."
 			end
 			
-			if not Asset:IsA("ModuleScript") then
-				ContentProvider:PreloadAsync({Asset})
-				local TimeLoaded = os.clock() - startAssetTime
-				game.ReplicatedStorage.PSRemotes.ServerCompleted:FireServer(TimeLoaded, Asset.ClassName, Asset.Name,"Other", Asset)
-				task.wait(Settings.InBetweenAssetsDelay)
-				local Progress = i / #AssetsData
-				if Settings.UseTweens then
-					barImg:TweenSize(UDim2.new(Progress, 0, 1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Sine, .5, true)
-				else
-					barImg.Size = UDim2.new(Progress, 0, 1, 0)
-				end
-				task.wait()
-			else --Is a module
-				ContentProvider:PreloadAsync({Asset})
-				require(Asset)
-				local TimeLoaded = os.clock() - startAssetTime
-				game.ReplicatedStorage.PSRemotes.ServerCompleted:FireServer(TimeLoaded, Asset.ClassName, Asset.Name, "Module", Asset)
-				task.wait(Settings.InBetweenAssetsDelay)
-				local Progress = i / #AssetsData
-				if Settings.UseTweens then
-					barImg:TweenSize(UDim2.new(Progress, 0, 1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Sine, .5, true)
-				else
-					barImg.Size = UDim2.new(Progress, 0, 1, 0)
-				end
-				task.wait()
+			ContentProvider:PreloadAsync({Asset})
+			local TimeLoaded = os.clock() - startAssetTime
+			task.wait(Settings.InBetweenAssetsDelay)
+			local Progress = i / #AssetsData
+			if Settings.UseTweens then
+				barImg:TweenSize(UDim2.new(Progress, 0, 1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Sine, .5, true)
+			else
+				barImg.Size = UDim2.new(Progress, 0, 1, 0)
 			end
+
+			if not Asset:IsA("ModuleScript") then
+				game.ReplicatedStorage.PSRemotes.ServerCompleted:FireServer(TimeLoaded, Asset.ClassName, Asset.Name,"Other", Asset)
+			else
+				require(Asset)
+				game.ReplicatedStorage.PSRemotes.ServerCompleted:FireServer(TimeLoaded, Asset.ClassName, Asset.Name, "Module", Asset)
+			end
+			task.wait()
 		end
 	end)
 	if not succ then
@@ -155,8 +121,8 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 		local ItemsToTween = {}
 		local TextToTween = {}
 		local DefautUI = game.Players.LocalPlayer.PlayerGui.PreloadServiceLoadingUI
-		local endTime = os.clock() - startTime
-		Print("Successfully loaded in "..math.round(endTime).." seconds!")
+		local EndTime = os.clock() - startTime
+		Print("Successfully loaded in "..math.round(EndTime).." seconds!")
 		if DefaultUI then
 			if Settings.AutoCloseUI then
 				if not Settings.UseTweens then
@@ -198,14 +164,14 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 						end
 					end
 					if UIType == "DarkOther" or "LightOther" then
-						DefautUI.Other:TweenPosition(UDim2.new(0.328, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, .5, true)
-						DefautUI.OtherLight:TweenPosition(UDim2.new(0.328, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, .5, true)
+						DefautUI.Other:TweenPosition(UDim2.new(0.328, 0, 2, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, .5, true)
+						DefautUI.OtherLight:TweenPosition(UDim2.new(0.328, 0, 2, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, .5, true)
 					end
 				end
 			end
 			DefautUI:Destroy()
 		end
-		local succ1, err2 = pcall(function() Loader.Completed:FireClient(game.Players.LocalPlayer, endTime, Code) Loader.Completed:FireServer(endTime) end)
+		local succ1, err2 = pcall(function() Loader.Completed:FireClient(game.Players.LocalPlayer, EndTime, Code) Loader.Completed:FireServer(EndTime) end)
 		if not succ1 then error(err2) return else end
 
 	end
@@ -215,7 +181,7 @@ function Loader.BindFrame(Player, Frame)
 	Print("Binding Frame...")
 	local FindFrame = Player.PlayerGui:FindFirstDecendant(Frame.Name)
 	if not FindFrame then
-		Print(' Could not bind frame. Error: Frame does not exist! ')
+		Print('Could not bind frame. Error: Frame does not exist! ')
 		return 
 	end
 	Frame:GetPropertyChangedSignal("Visible"):Connect(function()
@@ -228,33 +194,10 @@ function Loader.Print()
 	warn("[PreloadService]: Print is an internal function and cannot be used otherwise.")
 end
 
-function Loader.CheckVersion()
-	--[[
-	local marketplace = game:GetService("MarketplaceService")
-
-	local success, result = pcall(function()
-		return marketplace:GetProductInfo(8788148542)
-	end)
-
-	if success then
-		if result then
-			if result.Description:match("1.1.1") then
-				Print("Up to date! Version: 1.1.1")
-			else
-				warn("[ProloadService]: Out of date or MarketplaceService error. Please update your module by reinstalling it!")
-				if Settings.ShutdownIfOutofDate then script:Destroy() end
-			end
-		end
-	end
-	]]
-	warn("[PreloadService] ⚠️WARNING: CheckVersion is depercated and only exists for legacy code! You can check from the panel now. Please remove this from your code.")
-end
-
 function Loader.FireModule(Module)
 	Loader.Load({Module}, "None", nil, "PS_INTERNAL_MODULE")
 	Loader.Completed.OnClientEvent:Connect(function(Time,Key)
 		if Key == "PS_INTERNAL_MODULE" then
-			--Module is loaded
 			Module.Fire()
 		end
 	end)
