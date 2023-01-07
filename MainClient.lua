@@ -11,16 +11,32 @@
 - Handles SFX
 - Handles Panel Open
 - Handles some remotes
+- Changes themes
 
-
-
-There are some ~~pretty weird~~ things commented, ignore them
 ]]
-local IsOpen
-local function IsAcrylicUsed()
-	return not require(game.ReplicatedStorage.PreloadService.Settings).UseArcylic
+local function Print(str)
+	print("[PreloadService]: "..str)
 end
-local Theme = require(script.Parent.Themes:FindFirstChildWhichIsA("ModuleScript"))
+
+local function Warn(str)
+	warn("[PreloadService]: "..str)
+end
+
+local function Error(str)
+	error("[PreloadService]: "..str)
+end
+local IsOpen
+local MainFrame = script.Parent:WaitForChild("Main", 5)
+local function IsAcrylicUsed()
+	return not require(game.ReplicatedStorage.PreloadService.Config)["Settings"].UseArcylic
+end
+
+
+local function ChangeTheme(Theme)
+	Warn("Building Theme...")
+	MainFrame.BackgroundColor3 = Theme.BackgroundColor
+end
+--ChangeTheme("Default")
 local last = "Home"
 game.ReplicatedStorage.PSRemotes.NewPlayerClient.OnClientEvent:Connect(function(a)
 	print(a)
@@ -32,6 +48,31 @@ local function PlaySFX()
 end
 script.Parent.Main.Header.ScaleType = Enum.ScaleType.Crop
 local UIS = game:GetService("UserInputService")
+
+script.Parent.Main.Home.Head.Text = "Welcome to PreloadService, "..game.Players.LocalPlayer.DisplayName.."!"
+
+-- Fix mobile scaling 
+
+if not UIS.KeyboardEnabled and UIS.TouchEnabled then
+	Print("Making adjustments to UI (Mobile)")
+	local Header = MainFrame.Header
+	Header.Mark.Logo.Position = UDim2.new(-0.274, 0,0.088, 0)
+	for i, v in ipairs(MainFrame.Dock.buttons:GetChildren()) do
+		local asset = v:FindFirstChild("Desc")
+		if asset then
+			asset.Visible = false
+		else
+			Warn("Could not find Desc in button")
+		end
+	end
+	MainFrame.Dock.buttons.UIGridLayout.CellPadding = UDim2.new(.02,0,.5,0)
+	MainFrame.Dock.buttons.UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Header.Size = UDim2.new(1,0,.142,0)
+	local Dock = MainFrame.Dock
+	Dock.Position = UDim2.new(0.016, 0,0.134, 0)
+	Dock.Size = UDim2.new(0.967, 0,0.093, 0)
+end
+
 --//NAVIGATION\\--
 
 
@@ -99,35 +140,6 @@ local function NewNotification(admin, bodytext, headingtext, image, dur)
 	notif:Destroy()
 	Placeholder2:Destroy()
 end
-
-for i, v in ipairs(script.Parent.Main.Dock.buttons:GetChildren()) do
-	local frame = string.sub(v.Name, 2,100)
-	v.TextButton.MouseButton1Click:Connect(function()
-		if v.Name == "AMinimize" then return end
-		if script.Parent.Main:FindFirstChild(frame) then
-			last2 = v.Name
-			script.Parent.Main.Animation.Position = UDim2.new(0,0,0,0) --Fixes bug present in 2.0.0, atleast it should..
-			script.Parent.Main.Animation:TweenSize(UDim2.new(1,0,1,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-			PlaySFX()
-			script.Parent.Main[tostring(last)].Visible = false
-			last = frame
-			task.wait(require(game.ReplicatedStorage.PreloadService.Settings).PanelLoadingTime)
-			script.Parent.Main[frame].Visible = true
-			task.wait(0.2)
-			script.Parent.Main.Animation:TweenSizeAndPosition(UDim2.new(0,0,1,0), UDim2.new(1,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-			task.wait(.2)
-			script.Parent.Main.Animation.Position = UDim2.new(0,0,0,0)
-			--		NewNotification(game.Players.LocalPlayer, frame.." has been opened, this is to test the new notification system ;)", "Test notification", "rbxassetid://9482016562", 5)
-		else  --Doesn't exist
-			warn("[PreloadService]: Page not found! If you added a button please make sure that a page with the same name, but without the first character exists!")
-			script.Parent.Main[tostring(last)].Visible = false	
-			last = "Other"
-			script.Parent.Main.Other.Visible = true
-		end
-		--		print('"uwu" 🤓')
-	end)
-end
---	print('"owo" 🤓')
 
 -- Animations by 6Marchy4
 local UIS = game:GetService("UserInputService")
@@ -208,12 +220,12 @@ local function Close()
 		end
 	end
 end
-Close()
+--Close()
 task.wait(.1)
-script.Parent.Main.Visible = false
+--script.Parent.Main.Visible = false
 
 local function GetSetting(String)
-	return require(game.ReplicatedStorage.PreloadService.Settings)[String]
+	return require(game.ReplicatedStorage.PreloadService.Config)["Settings"][String]
 end
 local Down
 game:GetService("UserInputService").InputBegan:Connect(function(key, typing)
@@ -267,7 +279,7 @@ end)
 script.Parent.Main.Menu.Main.BUpdate.Check.MouseButton1Click:Connect(function()
 	local tl = script.Parent.Main.Menu.Main.BUpdate.Text
 	tl.Text = "Checking..."
-	task.wait(0.4)
+	task.wait(0.2)
 	tl.Text = "Waiting for server response.."
 	game.ReplicatedStorage.PSRemotes.CheckForUpdates:FireServer()
 	tl.Parent.Value.Changed:Connect(function()
@@ -276,3 +288,31 @@ script.Parent.Main.Menu.Main.BUpdate.Check.MouseButton1Click:Connect(function()
 	task.wait(5)
 	tl.Text = "Check for Updates"
 end)
+
+task.wait(2)
+for i, v in ipairs(script.Parent.Main.Dock.buttons:GetChildren()) do
+	local frame = string.sub(v.Name, 2,100)
+	v.TextButton.MouseButton1Click:Connect(function()
+		if v.Name == "AMinimize" then return end
+		if script.Parent.Main:FindFirstChild(frame) then
+			last2 = v.Name
+			script.Parent.Main.Animation.Position = UDim2.new(0,0,0,0) --Fixes bug present in 2.0.0, atleast it should..
+			script.Parent.Main.Animation:TweenSize(UDim2.new(1,0,1,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+			PlaySFX()
+			script.Parent.Main[tostring(last)].Visible = false
+			last = frame
+			task.wait(GetSetting("PanelLoadingTime"))
+			script.Parent.Main[frame].Visible = true
+			--			task.wait(0.2)
+			script.Parent.Main.Animation:TweenSizeAndPosition(UDim2.new(0,0,1,0), UDim2.new(1,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+			--			task.wait(.2)
+			script.Parent.Main.Animation.Position = UDim2.new(0,0,0,0)
+			--		NewNotification(game.Players.LocalPlayer, frame.." has been opened, this is to test the new notification system ;)", "Test notification", "rbxassetid://9482016562", 5)
+		else  --Doesn't exist
+			Warn("Page not found! If you added a button please make sure that a page with the same name, but without the first character exists!")
+			script.Parent.Main[tostring(last)].Visible = false	
+			last = "Other"
+			script.Parent.Main.Other.Visible = true
+		end
+	end)
+end
