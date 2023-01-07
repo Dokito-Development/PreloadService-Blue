@@ -1,24 +1,17 @@
---[[
-PreloadingService, DarkPixlz 2022, V1.9. Do not claim as your own!
-Info in PreloadingService/DefaultUI/ABOUT
-]]
-
---WARNING: IF YOU DID NOT BUY THIS FROM @DarkPixlz OR THE DEVFORUM, YOU GOT SCAMMED AND THERE IS PROBABLY A VIRUS IN HERE!
---THERE IS NO require() or getfenv 's in here! Press control/command + F, then type require() and getfenv().
---IF THE RESULTS AREN'T COMMENTED, DELETE THIS SCRIPT! GET IT FROM THE DEVFORUM LINK ABOVE. STAY SAFE FROM SCAMS!
+--!nolint
+--PreloadService, DarkPixlz 2022-2023, v3. Do not claim as your own!
 local Loader = {}
-Loader.Admins = {} --for player control
 Loader.Completed = Instance.new("RemoteEvent")
 repeat task.wait() until Loader.Completed
-local Settings = require(script.Settings)
+local Settings = require(script.Config)["Settings"]
 function Print(msg)
 	if Settings.PrintData == true then
 		print("[PreloadService]: "..msg)
 	end
 end
 Loader.GameLoaded = false
-function Loader.Load(AssetsData, UIType, CustomUI, Code) --TMP: a argument. TODO: Find fix for it so I can remove it.
-	if Loader.GameLoaded then Print("Game has already been loaded for user!") return end --Wont be used for now
+function Loader.Load(AssetsData, UIType, CustomUI, Code) 
+--	if Loader.GameLoaded then Print("Game has already been loaded for user!") return end
 	local ContentProvider = game:GetService("ContentProvider")
 	local text
 	local barImg
@@ -28,11 +21,12 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code) --TMP: a argument. TODO
 	local DefaultUI = false
 	local startTime = os.clock()
 	if not AssetsData == nil then
+		print("???")
+--		error("[PreloadService]: AssetsData is missing!")
 	else
 		DefaultUI = true
 		if AssetsData == "Game" then
 			Type = "Game"
-			print("hi")
 			AssetsData = {
 				game:GetService("HttpService"),
 				game.Players.LocalPlayer.PlayerGui,
@@ -57,33 +51,34 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code) --TMP: a argument. TODO
 	if CustomUI == nil then
 		if Type == "Game" then
 			if not Settings.LightDefaultUI then
-				local DefaultUI = script.DefaultUI:Clone()
+				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
 				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
 				text = DefaultUI.Game.LoadingText
 				barImg = DefaultUI.Game.Bar.Progress
 				UIType = "DarkGame"
 			else
-				local DefaultUI = script.DefaultUI:Clone()
+				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
 				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
 				text = DefaultUI.GameLight.LoadingText
 				barImg = DefaultUI.Game.Bar.Progress
 				UIType = "LightGame"
 			end
 		elseif UIType == "None" then
-			local DefaultUI = script.DefaultUI:Clone()
+			local DefaultUI = script.PreloadServiceLoadingUI:Clone()
 			DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
+			DefaultUI.Enabled = false
 			text = DefaultUI.GameLight.LoadingText
 			barImg = DefaultUI.Game.Bar.Progress
 			UIType = "None"
 		else
 			if not Settings.LightDefaultUI then
-				local DefaultUI = script.DefaultUI:Clone()
+				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
 				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
 				text = DefaultUI.Other.LoadingText
 				barImg = DefaultUI.Other.Bar.Progress
 				UIType = "DarkOther"
 			else
-				local DefaultUI = script.DefaultUI:Clone()
+				local DefaultUI = script.PreloadServiceLoadingUI:Clone()
 				DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
 				text = DefaultUI.OtherLight.LoadingText
 				barImg = DefaultUI.OtherLight.Bar.Progress
@@ -106,18 +101,20 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code) --TMP: a argument. TODO
 	local succ, err = pcall(function()
 		if CustomUI == nil then
 			text.Parent.Bar.LocalScript:Destroy()
-			task.wait(0.1)
+			--task.wait(0.1)
 			barImg:TweenSizeAndPosition(UDim2.new(0,0,1,0), UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 1, true)
-			task.wait(1.5)
+			--task.wait(1.5)
 		end
 		for i = 1, #AssetsData do
 			local startAssetTime = os.clock()
 			local Asset = AssetsData[i]
-			local Name = Asset.Name
+			local Name = tostring(Asset.Name) or ""
 			text.Text = "Loading "..Name.." [".. i .. " / "..#AssetsData.."]"
+			
 			if Asset.Name == "HttpService" then
 				text.Text = "Pinging HttpService.."
 			end
+			
 			if not Asset:IsA("ModuleScript") then
 				ContentProvider:PreloadAsync({Asset})
 				local TimeLoaded = os.clock() - startAssetTime
@@ -150,20 +147,20 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code) --TMP: a argument. TODO
 		warn("[PreloadService]: Could not preload an item! Error: "..err) 
 		text.Text = "Failed to load. Error: "..err..". Please rejoin, and notify the game owner or developer."
 		local End = {Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.fromRGB(255, 69, 72)}
-		local Info = TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 2)
+		local Info = TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 2)
 		local Tween = game:GetService("TweenService"):Create(barImg, Info, End)
 		Tween:Play()
 	else
 		text.Text = "Finished!"
 		local ItemsToTween = {}
 		local TextToTween = {}
-		local DefautUI = game.Players.LocalPlayer.PlayerGui.DefaultUI
+		local DefautUI = game.Players.LocalPlayer.PlayerGui.PreloadServiceLoadingUI
 		local endTime = os.clock() - startTime
 		Print("Successfully loaded in "..math.round(endTime).." seconds!")
 		if DefaultUI then
 			if Settings.AutoCloseUI then
 				if not Settings.UseTweens then
-					game.Players.LocalPlayer.PlayerGui.DefaultUI:Destroy()
+					game.Players.LocalPlayer.PlayerGui.PreloadServiceLoadingUI:Destroy()
 				else
 					if UIType == "DarkGame" then
 						ItemsToTween = {
@@ -209,7 +206,7 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code) --TMP: a argument. TODO
 			DefautUI:Destroy()
 		end
 		local succ1, err2 = pcall(function() Loader.Completed:FireClient(game.Players.LocalPlayer, endTime, Code) Loader.Completed:FireServer(endTime) end)
-		if not succ1 then Print(err2) return else end
+		if not succ1 then error(err2) return else end
 
 	end
 end
