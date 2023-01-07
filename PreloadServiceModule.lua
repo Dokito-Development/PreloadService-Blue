@@ -68,19 +68,14 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 		end
 
 		for i = 1, #AssetsData do
-			local startAssetTime = os.clock()
-			local Asset = AssetsData[i]
-			local Name = tostring(Asset.Name) or ""
+			local startAssetTime, Asset, Name = os.clock(), AssetsData[i], tostring(Asset.Name) or ""
 			text.Text = "Loading "..Name.." [".. i .. " / "..#AssetsData.."]"
 
-			if Asset.Name == "HttpService" then
-				text.Text = "Pinging HttpService.."
-			end
+			if Asset.Name == "HttpService" then text.Text = "Pinging HttpService.." end
 
 			ContentProvider:PreloadAsync({Asset})
-			local TimeLoaded = os.clock() - startAssetTime
+			local TimeLoaded, Progress = os.clock() - startAssetTime, i / #AssetsData
 			task.wait(Settings.InBetweenAssetsDelay)
-			local Progress = i / #AssetsData
 
 			if Settings.UseTweens then
 				BarImage:TweenSize(UDim2.new(Progress, 0, 1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Sine, .5, true)
