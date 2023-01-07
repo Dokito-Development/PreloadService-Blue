@@ -12,64 +12,40 @@ IF YOU MODIFY CODE I WILL NOT OFFER SUPPORT
 local Config = require(script.Config)
 script.Config.Parent = script.PreloadService
 print("["..Config.Name.."] \n Starting up...")
-local CurrentVers = Config.Version --DO NOT MODIFY THIS VALUE
---// Notification function. \\--
--- Moved it back for now
---Actual code
-local ModuleNotRequire = script.PreloadService
-ModuleNotRequire.Parent = game.ReplicatedStorage
-
+local CurrentVers, ModuleNotRequire, ModuleNotRequire.Parent = Config.Version, script.PreloadService, game.ReplicatedStorage
 local Remotes = Instance.new("Folder")
-Remotes.Name = "PSRemotes"
-Remotes.Parent = game.ReplicatedStorage
+Remotes.Name, Remotes.Parent = "PSRemotes", game.ReplicatedStorage
 local PluginsRemotes = Instance.new("Folder")
-PluginsRemotes.Name = "PS_PluginsRemotes"
-PluginsRemotes.Parent = Remotes
+PluginsRemotes.Name, PluginsRemotes.Parent = "PS_PluginsRemotes", Remotes
 local NewPlayerClient = Instance.new("RemoteEvent", Remotes)
 NewPlayerClient.Name = "NewPlayerClient"
-local GivenAdmin = Instance.new("RemoteEvent")
-local MPS = game:GetService("MarketplaceService")
-local PlrCount = 0 
-local SpecialEvent = Instance.new("RemoteEvent") --Only for the special parameters
-SpecialEvent.Name = "ServerCompleted"
-SpecialEvent.Parent = Remotes
+local GivenAdmin, MPS, PlrCount, SpecialEvent = Instance.new("RemoteEvent"), game:GetService("MarketplaceService"), 0, Instance.new("RemoteEvent")
+SpecialEvent.Name, SpecialEvent.Parent = "ServerCompleted", Remotes
 local e1 = Instance.new("RemoteFunction")  
-e1.Parent = Remotes
-e1.Name = "GetServerIndexRemote"
+e1.Parent, e1.Name = Remotes, "GetServerIndexRemote"
 local e2 = Instance.new("RemoteFunction")
-e2.Parent = game.ReplicatedStorage
-e2.Name = "TPRemote"
+e2.Parent, e2.Name = game.ReplicatedStorage, "TPRemote"
 local e3 = Instance.new("RemoteEvent")
-e3.Parent = Remotes
-e3.Name = "CheckForUpdates"
+e3.Parent, e3.Name = Remotes, "CheckForUpdates"
 local DSS = game:GetService("DataStoreService")
+
 print("Started!")
+
 -- The following code remakes the admin code to make sure nobody can get into it. It's Server-Sided but it's still nice to have an extra layer.
---[[
-local AdminsScript = script.Admins:Clone()
-script.Admins:Destroy()
-AdminsScript.Parent = script
-AdminsScript.Name = 'PS_Admins_'..game:GetService("HttpService"):GenerateGUID(false)
-]]
-local AdminsScript = script.Admins
-local AdminIDs = require(AdminsScript).Admins
-local GroupIDs = require(AdminsScript).Groups
-local players = game:GetService("Players")
-local LoadedModules = {}
-local InGameAdmins = {}
-local Settings = require(game.ReplicatedStorage.PreloadService.Config)["Settings"]
-local PS = require(game.ReplicatedStorage.PreloadService)
-local CompletedTimes = {}
-local ServerLifetime = 0
+
+local AdminsScript, AdminIDs, GroupIDs = script.Admins, require(AdminsScript).Admins, require(AdminsScript).Groups
+local players, LoadedModules, InGameAdmins, CompletedTimes, ServerLifetime = game:GetService("Players"), {}, {}, {}, 0
+local Settings, PS, Decimals = require(game.ReplicatedStorage.PreloadService.Config)["Settings"], require(game.ReplicatedStorage.PreloadService), GetSetting("ShortNumberDecimals")
+
 local function GetSetting(Setting)
 	local SettingModule = Config["Settings"]
-	--	print("settings "..SettingModule[Setting])
 	return SettingModule[Setting]
 end
-local Decimals = GetSetting("ShortNumberDecimals")
+
 local function Format(Int)
 	return string.format("%02i", Int)
 end
+
 local function Average(Table)
 	local number = 0
 	for _, value in pairs(Table) do
@@ -78,20 +54,15 @@ local function Average(Table)
 	return number / #Table
 end
 
-local function Ban(Player)
+local function Ban(Player) end
 
-end
-
-local kick = game:GetService("DataStoreService"):GetDataStore("KickData")
-local KickRem = Instance.new("RemoteEvent", Remotes)
+local kick, KickRem = game:GetService("DataStoreService"):GetDataStore("KickData"), Instance.new("RemoteEvent", Remotes)
 KickRem.Name = "KickPlr"
 
-KickRem.OnServerEvent:Connect(function(player,plrkicked) 
+KickRem.OnServerEvent:Connect(function(player, plrkicked) 
 	for i, v in ipairs(InGameAdmins) do
 		if player.UserId == v.UserId then
-			kick:SetAsync(plrkicked,1)
-			task.wait(15)
-			kick:SetAsync(plrkicked,0)
+			game:GetService("MessagingService"):PublishAsync("KickPlayer_PS", plrkicked)
 		else
 			if GetSetting("BanForExploits") then
 				Ban(player)
@@ -108,31 +79,16 @@ local function IsWidgetActive(plr, Widget)
 	end
 end
 
-local function WriteWidgetData(plr, Widget)
-end
+local function WriteWidgetData(plr, Widget) end
 
 local function n(admin, bodytext, headingtext, image, dur, t)
 	local Placeholder  = Instance.new("Frame")
-	Placeholder.Parent = admin.PlayerGui.PreloadServiceAdminPanel.Notifications
-	Placeholder.BackgroundTransparency = 1
-	Placeholder.Size = UDim2.new(0.996,0,0.096,0)
+	Placeholder.Parent, Placeholder.BackgroundTransparency, Placeholder.Size = admin.PlayerGui.PreloadServiceAdminPanel.Notifications, 1, UDim2.new(0.996,0,0.096,0)
 	local notif = admin.PlayerGui.PreloadServiceAdminPanel.Notifications.Template:Clone()
-	notif.Position = UDim2.new(0.4,0,0.904,0)
-	notif.Visible = true
-	notif.Size = UDim2.new(0.996,0,0.096,0)
-	notif.Parent = admin.PlayerGui.PreloadServiceAdminPanel.NotificationsTest
-	notif.Body.Text = bodytext
-	notif.Header.Title.Text = headingtext
-	notif.Header.ImageL.Image = image                 
+	notif.Position, notif.Visible, notif.Size, notif.Parent, notif.Body.Text, notif.Header.Title.Text, notif.Header.ImageL.Image = UDim2.new(0.4,0,0.904,0), true, UDim2.new(0.996,0,0.096,0), admin.PlayerGui.PreloadServiceAdminPanel.NotificationsTest, bodytext, headingtext, image                 
 	local NewSound  = Instance.new("Sound")
 	NewSound.Parent = notif
-	if not t then
-		NewSound.SoundId = "rbxassetid://9770089602"
-		NewSound:Play()		
-	else
-		NewSound.SoundId = "rbxassetid://9770087788"
-		NewSound:Play()
-	end
+	if not t then NewSound.SoundId = "rbxassetid://9770089602" NewSound:Play() else NewSound.SoundId = "rbxassetid://9770087788" NewSound:Play() end
 	local TS = game:GetService("TweenService")
 	local NotifTween = TS:Create(
 		notif,
@@ -154,9 +110,7 @@ local function n(admin, bodytext, headingtext, image, dur, t)
 	notif.Parent = admin.PlayerGui.PreloadServiceAdminPanel.Notifications
 	task.wait(dur)
 	local Placeholder2  = Instance.new("Frame")
-	Placeholder2.Parent = admin.PlayerGui.PreloadServiceAdminPanel.Notifications
-	Placeholder2.BackgroundTransparency = 1
-	Placeholder2.Size = UDim2.new(0.996,0,0.096,0)
+	Placeholder2.Parent, Placeholder2.BackgroundTransparency, Placeholder2.Size = admin.PlayerGui.PreloadServiceAdminPanel.Notifications, 1, UDim2.new(0.996,0,0.096,0)
 	notif.Parent = admin.PlayerGui.PreloadServiceAdminPanel.NotificationsTest
 	local NotifTween2 = TS:Create(
 		notif,
@@ -177,8 +131,9 @@ local function n(admin, bodytext, headingtext, image, dur, t)
 	notif:Destroy()
 	Placeholder2:Destroy()
 end
+
 local function NewNotification(admin, bodytext, headingtext, image, dur, t)
-	task.spawn(n,admin,bodytext,headingtext,image,dur, t)
+	task.spawn(n, admin, bodytext, headingtext, image, dur, t)
 end
 
 local function VersionCheck(plr, MAKE_THIS_FALSE)
@@ -190,8 +145,7 @@ local function VersionCheck(plr, MAKE_THIS_FALSE)
 			warn("ERROR: Unexpected call of CheckForUpdates")
 		end
 	end
-	local VersModule = require(8788148542)
-	local Frame = plr.PlayerGui.PreloadServiceAdminPanel.Main.Menu.Main.BUpdate
+	local VersModule, Frame = require(8788148542), plr.PlayerGui.PreloadServiceAdminPanel.Main.Menu.Main.BUpdate
 	if VersModule.Version ~= CurrentVers then
 		Frame.Parent.AInfo.vers.Text = CurrentVers.." by DarkPixlz, 2022".."(latest avail: "..VersModule.Version..", released "..VersModule.ReleaseDate.."."
 		warn("[PreloadService]: Out of date! Please update your module by closing this server.")
@@ -201,9 +155,10 @@ local function VersionCheck(plr, MAKE_THIS_FALSE)
 		Frame.Parent.AInfo.vers.Text = CurrentVers.." by DarkPixlz, 2022. Released "..VersModule.ReleaseDate.."."
 	end
 end
+
 local function New(plr)
 	table.insert(InGameAdmins, plr)
-	task.wait(1.5) --By now, plugins should have built.
+	task.wait(1.5)
 	local NewPanel = script.PreloadServiceAdminPanel:Clone()
 	NewPanel.Parent = plr.PlayerGui
 	VersionCheck(plr, true)
@@ -226,31 +181,20 @@ local function New(plr)
 	local Frame = plr.PlayerGui.PreloadServiceAdminPanel.Main.Menu.Main.BUpdate
 	Frame.Parent.AInfo.vers.Text = CurrentVers.." by DarkPixlz, 2022. Licensed under TBD."
 	NewNotification(plr,"PreloadService Admin Panel v"..CurrentVers.." loaded! Press "..GetSetting("PrefixString").." to enter the panel.","Welcome!","rbxassetid://10012255725",15)
-
 end
+
 players.PlayerAdded:Connect(function(plr)
-	-- Do the player counts first so if we need to return we can
-	--local NewPlayerCount = #players:GetPlayers()
-	--PlrCount += 1
-	-- 3.0 beta: I'm not sure why that old code existed..??? Must be early 2.0 beta, but I removed it bc I have no idea what purpose it served
 	NewPlayerClient:FireAllClients(PlrCount)
 	if table.find(AdminIDs, plr.UserId) then
 		New(plr)
 	else
-		--may be in group?
-		for i, v in ipairs(GroupIDs) do
+		for i, v in pairs(GroupIDs) do
 			if plr:IsInGroup(v) then
 				New(plr)
 				return
 			end
 		end
 	end
---[[
-	local ver = require(8788148542).Version
-	if ver~=2.0 then
-		warn("outofdate_err")
-	end 
-]]
 end)
 
 local function GetTimeWithSeconds(Seconds)
@@ -266,6 +210,7 @@ local function GetTimeWithSeconds(Seconds)
 	end
 
 end
+
 function GetShortNumer(Number)
 	return math.floor(((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3)) * 10 ^ (Decimals or 3)) / 10 ^ (Decimals or 3)..(({"k", "M", "B", "T", "Qa", "Qn", "Sx", "Sp", "Oc", "N"})[math.floor(math.log10(Number) / 3)] or "")
 end
@@ -284,13 +229,7 @@ local function MakeLargeHistoryHomeWidget(Admin,PFP,Username,InstanceName,Instan
 	CurrentlyExisting = #Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget:GetChildren()
 
 	local NewCard = Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.Template:Clone()
-	NewCard.Parent =Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget
-	NewCard.Visible = true
-	NewCard.Name = CurrentlyExisting
-	NewCard.PlayerImage.Image = PFP
-	NewCard.Username.Text = "@"..Username
-	NewCard.Time.Text = Time
-	NewCard.ItemName.Text = InstanceName
+	NewCard.Parent, NewCard.Visible, NewCard.Name, NewCard.PlayerImage.Image, NewCard.Username.Text, NewCard.Time.Text, NewCard.ItemName.Text = Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget, true, CurrentlyExisting, PFP, "@"..Username, Time, InstanceName
 end
 
 local function MakeHistory(Admin,PFP,Username,InstanceName,InstanceType,Time)
@@ -303,14 +242,9 @@ local function MakeHistory(Admin,PFP,Username,InstanceName,InstanceType,Time)
 	CurrentlyExisting = #Admin.PlayerGui.PreloadServiceAdminPanel.Main.History.MainFrame:GetChildren()
 
 	local NewCard = Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.Template:Clone()
-	NewCard.Parent =Admin.PlayerGui.PreloadServiceAdminPanel.Main.History.MainFrame
-	NewCard.Visible = true
-	NewCard.Name = CurrentlyExisting
-	NewCard.PlayerImage.Image = PFP
-	NewCard.Username.Text = "@"..Username
-	NewCard.Time.Text = Time
-	NewCard.ItemName.Text = InstanceName
+	NewCard.Parent, NewCard.Visible, NewCard.Name, NewCard.PlayerImage.Image, NewCard.Username.Text, NewCard.Time.Text, NewCard.ItemName.Text = Admin.PlayerGui.PreloadServiceAdminPanel.Main.History.MainFrame, true, CurrentlyExisting, PFP, "@"..Username, Time, InstanceName
 end
+
 local function MakeModuleHistoryCard(Admin,PFP,Username,InstanceName,InstanceType,Time)
 	CurrentlyExisting = #Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget:GetChildren()
 	if CurrentlyExisting >= 50 then
@@ -321,22 +255,13 @@ local function MakeModuleHistoryCard(Admin,PFP,Username,InstanceName,InstanceTyp
 	CurrentlyExisting = #Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget:GetChildren()
 
 	local NewCard = Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.Template:Clone()
-	NewCard.Parent =Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget
-	NewCard.Visible = true
-	NewCard.Name = CurrentlyExisting
-	NewCard.PlayerImage.Image = PFP
-	NewCard.Username.Text = "@"..Username
-	NewCard.Time.Text = Time
-	NewCard.Type.Text = InstanceName
+	NewCard.Parent, NewCard.Visible, NewCard.Name, NewCard.PlayerImage.Image, NewCard.Username.Text, NewCard.Time.Text, NewCard.Type.Text = Admin.PlayerGui.PreloadServiceAdminPanel.Main.Home.HistoryWidget, true, CurrentlyExisting, PFP, "@"..Username, Time, InstanceName
 end
 
-
-
 players.PlayerRemoving:Connect(function(plr)
-	if table.find(InGameAdmins, plr) then
-		table.remove(InGameAdmins, table.find(InGameAdmins, plr))
-	end
+	if table.find(InGameAdmins, plr) then table.remove(InGameAdmins, table.find(InGameAdmins, plr)) end
 end)
+
 SpecialEvent.OnServerEvent:Connect(function(PlayerLoaded, Time, ItemClass, ItemName, ModOrRegular, item)
 	table.insert(CompletedTimes,Time)
 	ServerLifetime += 1
@@ -367,54 +292,28 @@ SpecialEvent.OnServerEvent:Connect(function(PlayerLoaded, Time, ItemClass, ItemN
 				GetTimeWithSeconds(Time)
 			)
 			local Home = Frame.Parent.Parent.Home
-			Home.total.Text = GetShortNumer(#CompletedTimes).." total assets loaded"
-			Home.avg.Text = GetTimeWithSeconds(Average(CompletedTimes)).." average loading time, or lower"
-			Home.server.Text = GetShortNumer(ServerLifetime).." assets loaded in server lifetime"
+			Home.total.Text, Home.avg.Text, Home.server.Text = GetShortNumer(#CompletedTimes).." total assets loaded", GetTimeWithSeconds(Average(CompletedTimes)).." average loading time, or lower", GetShortNumer(ServerLifetime).." assets loaded in server lifetime"
 		else
 			table.insert(LoadedModules, item)
 			local new = Frame.Parent.Template:Clone()
-			new.Visible = true
-			new.Parent = Frame
-			new.ItemName.Text = "Loaded "..ItemName
-			new.Type.Text = ItemClass
-			if math.floor(Time) ~= 0 then
-				new.Time.Text = GetTimeWithSeconds(Time)
-			else
-				new.Time.Text = "🎉 Below 0"
-			end
+			new.Visible, new.Parent, new.ItemName.Text, new.Type.Text = true, Frame, "Loaded "..ItemName, ItemClass
+			if math.floor(Time) ~= 0 then new.Time.Text = GetTimeWithSeconds(Time) else new.Time.Text = "🎉 Below 0" end
 			new.Username.Text = PlayerLoaded.DisplayName.."(@"..PlayerLoaded.Name..")"
 			task.wait(Settings.renderTime)
 			new.PlayerImage.Image = players:GetUserThumbnailAsync(PlayerLoaded.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-			--History
+			-- History
 			local new = Frame.Parent.Parent.Modules.MainFrame.Template:Clone()
-			new.Visible = true
-			new.Parent =  Frame.Parent.Parent.Modules.MainFrame
-			new.ItemName.Text = "Loaded "..ItemName
-			new.Type.Text = ItemClass
-			new.Time.Text = GetTimeWithSeconds(Time)
-			new.Username.Text = PlayerLoaded.DisplayName.."(@"..PlayerLoaded.Name..")"
-			new.thumbnail.Image = players:GetUserThumbnailAsync(PlayerLoaded.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-			local Home = Frame.Parent.Parent.Home
-			local ModulesFrame = Frame.Parent.Parent.Modules
+			new.Visible, new.Parent, new.ItemName.Text, new.Type.Text, new.Time.Text, new.Time.Text, new.Username.Text, new.thumbnail.Image = true, Frame.Parent.Parent.Modules.MainFrame, "Loaded "..ItemName, ItemClass, GetTimeWithSeconds(Time), PlayerLoaded.DisplayName.."(@"..PlayerLoaded.Name..")", players:GetUserThumbnailAsync(PlayerLoaded.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+			local Home, ModulesFrame = Frame.Parent.Parent.Home, Frame.Parent.Parent.Modules
 			Home.total.Text = GetShortNumer(#CompletedTimes).." Total Assets Loaded"
-			--			Home.server.Text = GetShortNumer(ServerLifetime).." assets loaded in server lifetime"
-			--			print(Home.server.Text..", "..ServerLifetime)
-			if math.floor(Average(CompletedTimes)) ~= 0 then
-				Home.avg.Text = GetTimeWithSeconds(Average(CompletedTimes)).." Average Loading Time"
-			else
-				Home.avg.Text = "🎉 Average is 0 or lower!"
-			end
-
-			if #LoadedModules ~= 1 then
-				Home.modules.Text = GetShortNumer(#LoadedModules).." loaded modules"
-			else
-				Home.modules.Text = "1 loaded module"
-			end
+			--	Home.server.Text = GetShortNumer(ServerLifetime).." assets loaded in server lifetime"
+			--	print(Home.server.Text..", "..ServerLifetime)
+			if math.floor(Average(CompletedTimes)) ~= 0 then Home.avg.Text = GetTimeWithSeconds(Average(CompletedTimes)).." Average Loading Time" else Home.avg.Text = "🎉 Average is 0 or lower!" end
+			if #LoadedModules ~= 1 then Home.modules.Text = GetShortNumer(#LoadedModules).." loaded modules" else Home.modules.Text = "1 loaded module" end
 		end
 	end
 end)
 
--- I'm not exactly sure why this exists and not just VersionCheck() but we're going with it
 e3.OnServerEvent:Connect(function(plr)
 	task.wait(2)
 	if not table.find(InGameAdmins,plr) then

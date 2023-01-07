@@ -8,10 +8,6 @@ whatever i'm getting tired
 
 ]]
 
-function module:OpenPanel(plr)
-	
-	
-	
-end
+function module:OpenPanel(plr) end
 
 return module
