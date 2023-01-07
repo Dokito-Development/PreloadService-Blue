@@ -17,8 +17,8 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 	local Type
 	local DefaultUI = false
 	local startTime = os.clock()
-	if not AssetsData == nil then
-		error("[PreloadService]: AssetsData is missing!")
+	if AssetsData ~= nil then
+--		error("[PreloadService]: AssetsData is missing!")
 	else
 		DefaultUI = true
 		if AssetsData == "Game" then
@@ -42,7 +42,7 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 			} 
 		end
 	end
-			if CustomUI == nil then
+	if CustomUI == nil then
 		local DefaultUI = script.PreloadServiceLoadingUI:Clone()
 		DefaultUI.Parent = game.Players.LocalPlayer.PlayerGui
 		barImg = DefaultUI.Game.Bar.Progress
@@ -55,7 +55,8 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 				text = DefaultUI.GameLight.LoadingText
 			end
 		else
-				UIType = "DarkOther"
+			if not Settings.LightDefaultUI then
+				UIType = "OtherDark"
 				text = DefaultUI.Other.LoadingText
 			else
 				UIType = "LightOther"
@@ -66,6 +67,7 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 		text = CustomUI.LoadingText
 		barImg = CustomUI.Bar.Progress
 	end
+
 	if UIType == "None" then
 		text.Parent.Visible = false
 	end
@@ -85,11 +87,11 @@ function Loader.Load(AssetsData, UIType, CustomUI, Code)
 			local Asset = AssetsData[i]
 			local Name = tostring(Asset.Name) or ""
 			text.Text = "Loading "..Name.." [".. i .. " / "..#AssetsData.."]"
-			
+
 			if Asset.Name == "HttpService" then
 				text.Text = "Pinging HttpService.."
 			end
-			
+
 			ContentProvider:PreloadAsync({Asset})
 			local TimeLoaded = os.clock() - startAssetTime
 			task.wait(Settings.InBetweenAssetsDelay)
